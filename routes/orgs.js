@@ -1,0 +1,136 @@
+'use strict';
+
+const _       = require('lodash');
+const db      = require('../db.js');
+const express = require('express');
+const router  = express.Router();
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+router.get('/', function(req, res, next){
+    db('auth.orgs')
+        .select()
+        .where(req.query || {})
+        .then ( out => res.status(200).jsonp(out) )
+        .catch( err => res.status(404).jsonp(err) );
+});
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+router.post('/', function(req, res, next){
+    db('auth.orgs')
+        .insert(req.body)
+        .returning('*')
+        .then ( out => res.status(200).jsonp(out) )
+        .catch( err => res.status(404).jsonp(err) );
+});
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+router.get('/:org_id', function(req, res, next){
+    db('auth.orgs')
+        .first()
+        .where(req.params)
+        .then ( out => res.status(200).jsonp(out) )
+        .catch( err => res.status(404).jsonp(err) );
+});
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+router.delete('/:org_id', function(req, res, next){
+    db('auth.orgs')
+        .del()
+        .where(req.params)
+        .returning('*')
+        .then ( out => res.status(200).jsonp(out) )
+        .catch( err => res.status(404).jsonp(err) );
+});
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+router.patch('/:org_id', function(req, res, next){
+    db('auth.orgs')
+        .update(req.body, { patch: true })
+        .where(req.params)
+        .returning('*')
+        .then ( out => res.status(200).jsonp(out) )
+        .catch( err => res.status(404).jsonp(err) );
+});
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+router.post('/:org_id/staff', function(req, res, next) {
+    db('auth.staff')
+        .insert({ ...req.body, ...req.params })
+        .returning('*')
+        .then ( out => res.status(200).jsonp(out) )
+        .catch( err => res.status(404).jsonp(err) );
+});
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+router.get('/:org_id/staff', function(req, res, next) {
+    db('auth.staff')
+        .select()
+        .join('auth.requests', 'staff.request_id',  'requests.request_id')
+        .join('auth.users',    'users.user_id',     'users.user_id')
+        .where(req.params)
+        .then(out => res.status(200).jsonp(out))
+        .catch(err => res.status(404).jsonp(err));
+});
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+router.post('/:org_id/assigns', function(req, res, next) {
+    db('auth.assigns')
+        .insert({ ...req.body, ...req.params })
+        .returning('*')
+        .then ( out => res.status(200).jsonp(out) )
+        .catch( err => res.status(404).jsonp(err) );
+});
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+router.get('/:org_id/assigns', function(req, res, next) {
+    db('auth.staff')
+        .select()
+        .join('auth.requests', 'assigns.request_id',  'requests.request_id')
+        .join('auth.users',    'users.user_id',     'users.user_id')
+        .where(req.params)
+        .then ( out => res.status(200).jsonp(out) )
+        .catch( err => res.status(404).jsonp(err) );
+});
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+router.post('/:org_id/licenses', function(req, res, next) {
+    db('auth.licenses')
+        .insert({ ...req.body, ...req.params })
+        .returning('*')
+        .then ( out => res.status(200).jsonp(out) )
+        .catch( err => res.status(404).jsonp(err) );
+});
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+router.get('/:org_id/licenses', function(req, res, next){
+    db('auth.licenses_req')
+        .select()
+        .join ('auth.requests', 'assigns.request_id',  'requests.request_id')
+        .join ('auth.apps', 'apps.app_id', 'licenses.app_id')
+        .where(req.params)
+        .then ( out => res.status(200).jsonp(out) )
+        .catch( err => res.status(404).jsonp(err) );
+});
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+module.exports = router;
